@@ -6,15 +6,14 @@ import os
 # Use Streamlit Secrets to store credentials
 username = st.secrets["mongodb"]["username"]
 password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])
+ADMIN_USERNAME = st.secrets["mongodb"]["admin_username"]
+
 uri = f"mongodb+srv://{username}:{password}@cluster0.0d7syo5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 # Create Mongo client
 client = MongoClient(uri)
 db = client['ebooks_db']
 collection = db['books']
-
-# Set admin username for deletion control
-ADMIN_USERNAME = st.secrets["admin_username"]
 
 # App Title
 st.title("📚 E-Books Library")
@@ -86,5 +85,3 @@ if search_term:
                 st.info("🔒 Only admins can delete books.")
     else:
         st.info("No books found. Try a different search.")
-
-
