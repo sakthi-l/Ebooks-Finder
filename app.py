@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import streamlit as st
 
-client = MongoClient("mongodb+srv://22sakthil64:adhavan@13@cluster0.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://22sakthil64:adhavan%4013@cluster0.mongodb.net/?retryWrites=true&w=majority")
 db = client["ebooksDB"]
 collection = db["books"]
 
