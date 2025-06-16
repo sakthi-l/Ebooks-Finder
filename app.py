@@ -1,10 +1,11 @@
 import streamlit as st
 from pymongo import MongoClient
 import urllib.parse
+import os
 
-# MongoDB Connection (Ensure special characters in password are escaped)
-username = "22sakthil64"
-password = urllib.parse.quote_plus("adhavan@13")  # becomes adhavan%4013
+# Use Streamlit Secrets to store credentials
+username = st.secrets["mongodb"]["username"]
+password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])
 uri = f"mongodb+srv://{username}:{password}@cluster0.mongodb.net/?retryWrites=true&w=majority"
 
 # Create Mongo client
