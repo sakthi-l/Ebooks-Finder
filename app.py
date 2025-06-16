@@ -1,19 +1,18 @@
 import streamlit as st
 from pymongo import MongoClient
 import urllib.parse
-import os
 
-# Use Streamlit Secrets to store credentials
+# Load credentials from Streamlit secrets
 username = st.secrets["mongodb"]["username"]
-password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])
-uri = f"mongodb+srv://{username}:{password}@cluster0.mongodb.net/?retryWrites=true&w=majority"
+password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])  # safely encode special characters
+uri = f"mongodb+srv://{username}:{password}@cluster0.0d7syo5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
-# Create Mongo client
+# Connect to MongoDB
 client = MongoClient(uri)
 db = client['ebooks_db']
 collection = db['books']
 
-# App Title
+# Title
 st.title("📚 E-Books Library")
 
 # Add Book Form
@@ -38,7 +37,7 @@ with st.expander("➕ Add New Book"):
             else:
                 st.error("All fields are required.")
 
-# Search
+# Search Field
 search_term = st.text_input("🔍 Search by title, author, or language")
 query = {}
 if search_term:
