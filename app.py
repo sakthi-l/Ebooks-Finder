@@ -1,68 +1,60 @@
 import streamlit as st
 from pymongo import MongoClient
 import urllib.parse
+import os
 
-# Load credentials from secrets
+# Use Streamlit Secrets to store credentials
 username = st.secrets["mongodb"]["username"]
 password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])
 uri = f"mongodb+srv://{username}:{password}@cluster0.0d7syo5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
+# Create Mongo client
 client = MongoClient(uri)
 db = client['ebooks_db']
 collection = db['books']
 
-# Admin credentials
+# Set admin username for deletion control
 ADMIN_USERNAME = st.secrets["admin_username"]
-ADMIN_PASSWORD = st.secrets["admin_password"]
 
-# Session variables
+# App Title
+st.title("📚 E-Books Library")
+
+# Login Input
 if "username" not in st.session_state:
     st.session_state["username"] = ""
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
 
-# Sidebar Login
 with st.sidebar:
     st.subheader("🔐 Login")
-    input_username = st.text_input("Username")
-    input_password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if input_username == ADMIN_USERNAME and input_password == ADMIN_PASSWORD:
-            st.session_state["username"] = input_username
-            st.session_state["authenticated"] = True
-            st.success("Logged in as admin ✅")
-        else:
-            st.session_state["username"] = input_username
-            st.session_state["authenticated"] = False
-            st.warning("Logged in as guest (limited access)")
+    st.session_state["username"] = st.text_input("Enter your username")
+    st.session_state["password"] = st.text_input("Enter your password", type="password")
 
-st.title("📚 E-Books Library")
 st.markdown(f"👤 Logged in as: **{st.session_state['username']}**")
 
-# Add Book
-with st.expander("➕ Add New Book"):
-    with st.form("add_book_form"):
-        title = st.text_input("Title")
-        author = st.text_input("Author")
-        language = st.text_input("Language")
-        link = st.text_input("Book Link (URL)")
-        submit = st.form_submit_button("Add Book")
+# Add Book Form (Admin only)
+if st.session_state["username"] == ADMIN_USERNAME:
+    with st.expander("➕ Add New Book"):
+        with st.form("add_book_form"):
+            title = st.text_input("Title")
+            author = st.text_input("Author")
+            language = st.text_input("Language")
+            link = st.text_input("Book Link (URL)")
+            submit = st.form_submit_button("Add Book")
 
-        if submit:
-            if title and author and language and link:
-                collection.insert_one({
-                    "title": title,
-                    "author": author,
-                    "language": language,
-                    "link": link
-                })
-                st.success(f"'{title}' has been added!")
-                st.toast("Refreshing...")
-                st.stop()
-            else:
-                st.error("All fields are required.")
+            if submit:
+                if title and author and language and link:
+                    collection.insert_one({
+                        "title": title,
+                        "author": author,
+                        "language": language,
+                        "link": link
+                    })
+                    st.success(f"'{title}' has been added!")
+                    st.toast("Refreshing...")
+                    st.stop()  # Ends execution; the app will refresh
+                else:
+                    st.error("All fields are required.")
 
-# Search Books
+# Search
 search_term = st.text_input("🔍 Search by title, author, or language")
 
 if search_term:
@@ -74,6 +66,7 @@ if search_term:
         ]
     }
 
+    # Display Books only after search
     books = list(collection.find(query))
 
     if books:
@@ -83,14 +76,15 @@ if search_term:
             st.markdown(f"**{book['title']}** by *{book['author']}* ({book['language']})")
             st.write(f"[Open Book]({book['link']})")
 
-            if st.session_state["authenticated"]:
+            if st.session_state.get("username") == ADMIN_USERNAME:
                 if st.button(f"❌ Delete '{book['title']}'", key=book_id):
                     collection.delete_one({"_id": book["_id"]})
                     st.success(f"'{book['title']}' deleted.")
                     st.toast("Refreshing...")
-                    st.stop()
+                    st.stop()  # Ends execution; the app will refresh
             else:
                 st.info("🔒 Only admins can delete books.")
     else:
         st.info("No books found. Try a different search.")
+
 
