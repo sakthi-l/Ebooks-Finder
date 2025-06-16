@@ -1,7 +1,6 @@
 from pymongo import MongoClient
+client = MongoClient("mongodb+srv://22sakthil64:adhavan%4013@cluster0.mongodb.net/?retryWrites=true&w=majority")
 
-# Replace with your actual password
-client = MongoClient("mongodb+srv://22sakthil64:sakthi123@cluster0.mongodb.net/?retryWrites=true&w=majority")
 
 db = client["ebooksDB"]
 collection = db["books"]
