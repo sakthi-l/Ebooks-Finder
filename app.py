@@ -1,18 +1,19 @@
 import streamlit as st
 from pymongo import MongoClient
 import urllib.parse
+import os
 
-# Load credentials from Streamlit secrets
+# Use Streamlit Secrets to store credentials
 username = st.secrets["mongodb"]["username"]
-password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])  # safely encode special characters
-uri = f"mongodb+srv://{username}:{password}@cluster0.0d7syo5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+password = urllib.parse.quote_plus(st.secrets["mongodb"]["password"])
+uri = f"mongodb+srv://{username}:{password}@cluster0.mongodb.net/?retryWrites=true&w=majority"
 
-# Connect to MongoDB
+# Create Mongo client
 client = MongoClient(uri)
 db = client['ebooks_db']
 collection = db['books']
 
-# Title
+# App Title
 st.title("📚 E-Books Library")
 
 # Add Book Form
@@ -33,11 +34,12 @@ with st.expander("➕ Add New Book"):
                     "link": link
                 })
                 st.success(f"'{title}' has been added!")
-                st.experimental_rerun()
+                st.toast("Refreshing...")
+                st.stop()  # Ends execution; the app will refresh
             else:
                 st.error("All fields are required.")
 
-# Search Field
+# Search
 search_term = st.text_input("🔍 Search by title, author, or language")
 query = {}
 if search_term:
@@ -61,6 +63,7 @@ if books:
         if st.button(f"❌ Delete '{book['title']}'", key=book_id):
             collection.delete_one({"_id": book["_id"]})
             st.success(f"'{book['title']}' deleted.")
-            st.experimental_rerun()
+            st.toast("Refreshing...")
+            st.stop()  # Ends execution; the app will refresh
 else:
     st.info("No books found. Try a different search.")
