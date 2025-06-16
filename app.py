@@ -13,8 +13,21 @@ client = MongoClient(uri)
 db = client['ebooks_db']
 collection = db['books']
 
+# Set admin username for deletion control
+ADMIN_USERNAME = st.secrets["admin_username"]
+
 # App Title
 st.title("📚 E-Books Library")
+
+# Login Input
+if "username" not in st.session_state:
+    st.session_state["username"] = ""
+
+with st.sidebar:
+    st.subheader("🔐 Login")
+    st.session_state["username"] = st.text_input("Enter your username")
+
+st.markdown(f"👤 Logged in as: **{st.session_state['username']}**")
 
 # Add Book Form
 with st.expander("➕ Add New Book"):
@@ -41,7 +54,7 @@ with st.expander("➕ Add New Book"):
 
 # Search
 search_term = st.text_input("🔍 Search by title, author, or language")
-query = {}
+
 if search_term:
     query = {
         "$or": [
@@ -51,19 +64,23 @@ if search_term:
         ]
     }
 
-# Display Books
-books = list(collection.find(query))
+    # Display Books only after search
+    books = list(collection.find(query))
 
-if books:
-    st.subheader("📖 Matching Books")
-    for book in books:
-        book_id = str(book["_id"])
-        st.markdown(f"**{book['title']}** by *{book['author']}* ({book['language']})")
-        st.write(f"[Open Book]({book['link']})")
-        if st.button(f"❌ Delete '{book['title']}'", key=book_id):
-            collection.delete_one({"_id": book["_id"]})
-            st.success(f"'{book['title']}' deleted.")
-            st.toast("Refreshing...")
-            st.stop()  # Ends execution; the app will refresh
-else:
-    st.info("No books found. Try a different search.")
+    if books:
+        st.subheader("📖 Matching Books")
+        for book in books:
+            book_id = str(book["_id"])
+            st.markdown(f"**{book['title']}** by *{book['author']}* ({book['language']})")
+            st.write(f"[Open Book]({book['link']})")
+
+            if st.session_state.get("username") == ADMIN_USERNAME:
+                if st.button(f"❌ Delete '{book['title']}'", key=book_id):
+                    collection.delete_one({"_id": book["_id"]})
+                    st.success(f"'{book['title']}' deleted.")
+                    st.toast("Refreshing...")
+                    st.stop()  # Ends execution; the app will refresh
+            else:
+                st.info("🔒 Only admins can delete books.")
+    else:
+        st.info("No books found. Try a different search.")
