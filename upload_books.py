@@ -1,22 +1,16 @@
 from pymongo import MongoClient
-import streamlit as st
 
-client = MongoClient("mongodb+srv://22sakthil64:adhavan@13@cluster0.mongodb.net/?retryWrites=true&w=majority")
+# Replace with your actual password
+client = MongoClient("mongodb+srv://22sakthil64:sakthi123@cluster0.mongodb.net/?retryWrites=true&w=majority")
+
 db = client["ebooksDB"]
 collection = db["books"]
 
-st.title("📚 Multilingual eBook Library")
+books = [
+    {"title": "The Alchemist", "author": "Paulo Coelho", "language": "English"},
+    {"title": "Ponniyin Selvan", "author": "Kalki", "language": "Tamil"},
+    {"title": "One Hundred Years of Solitude", "author": "Gabriel Garcia Marquez", "language": "Spanish"},
+]
 
-search = st.text_input("🔍 Search by title, author, or language")
-
-if search:
-    results = collection.find({
-        "$or": [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"author": {"$regex": search, "$options": "i"}},
-            {"language": {"$regex": search, "$options": "i"}}
-        ]
-    })
-
-    for book in results:
-        st.markdown(f"**{book['title']}** by *{book['author']}* ({book['language']})")
+collection.insert_many(books)
+print("✅ Books inserted successfully.")
